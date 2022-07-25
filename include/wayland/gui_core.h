@@ -54,21 +54,38 @@ struct wl_surface_state_s {
 /* Fills a given SURFACE with cursor.
 	TODO: rename to 'set_cursor()'
 */
-extern void set_cursor(struct wl_surface_state_s* p_cursor_surface);
+extern void set_cursor(struct wl_surface_state_s * const p_cursor_surface);
 
 
 /* Fills a given SURFACE with line.
 	TODO: short explanation
 */
-extern void set_line(struct wl_surface_state_s* p_wl_surface_state, struct scs_point p1, struct scs_point p2);
+extern void set_line(struct wl_surface_state_s * const p_wl_surface_state, struct scs_point p1, struct scs_point p2);
 
 
 /* Fills a given SURFACE with rectangle.
 	NOTE: fills up 2px at a time.
+    Faster.
+    Less accurate with odd width.
+    Depends on little-endian.
 */
-extern void set_rect(struct pixel * const p_buffer_data_start, struct scs_point p,
-                     uint32_t width, uint32_t height);
+extern void set_rect(struct wl_surface_state_s * const p_wl_surface_state,
+						struct scs_point p,
+						const uint32_t width,
+						const uint32_t height,
+						const uint32_t color);
 
+
+/* Fills a given SURFACE with rectangle.
+    Slower.
+    Accurate with odd width.
+    Endian - independent.
+*/
+extern void set_rect_a(struct wl_surface_state_s * const p_wl_surface_state,
+                        struct scs_point p,
+                        const uint32_t width,
+                        const uint32_t height,
+                        const uint32_t color);
 
 
 #endif

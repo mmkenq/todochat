@@ -1,5 +1,5 @@
 
-#include "surfaces.h"
+#include "init_wayland.h"
 
 // TODO:
 /*struct app_state {

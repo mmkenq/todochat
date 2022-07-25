@@ -10,7 +10,7 @@
 
 /* Fills a given surface with cursor. (cursorv renderer)
 */
-extern void set_cursor(struct wl_surface_state_s* p_cursor_surface
+extern void set_cursor(struct wl_surface_state_s * const p_cursor_surface
 ){
     // TODO
     // struct wl_cursor_v cursor = get_cursor_by_name(cursor_name);
@@ -37,7 +37,7 @@ extern void set_cursor(struct wl_surface_state_s* p_cursor_surface
 /* Fill a given surface with line.
     TODO: optimize for only using integers
 */
-extern void set_line(struct wl_surface_state_s* p_wl_surface_state, struct scs_point p1, struct scs_point p2                     
+extern void set_line(struct wl_surface_state_s * const p_wl_surface_state, struct scs_point p1, struct scs_point p2                     
 ){
     struct line_func_2d func = {
         .dx = p2.scs_x - p1.scs_x,
@@ -104,17 +104,19 @@ extern void set_line(struct wl_surface_state_s* p_wl_surface_state, struct scs_p
     0xff0000ff is full blue
     0xffdeed55 is yellowish
 */
-extern void set_rect(struct pixel * const p_buffer_data_start, struct scs_point p,
-                     uint32_t width, uint32_t height
+extern void set_rect(struct wl_surface_state_s * const p_wl_surface_state,
+                        struct scs_point p,
+                        const uint32_t width,
+                        const uint32_t height,
+                        const uint32_t color
 ){
-
-    const uint32_t user_color = 0xff3d8069; // greenish
-    uint64_t color = (uint64_t)user_color << 32 | user_color;
+    // doubled - color
+    uint64_t dcolor = (uint64_t)color << 32 | color;
 
 
     // uint32_t is more than enough for 1920x1200 offset (i.e = 2304000px < UINT32_MAX)
     // so we can store it
-    uint32_t offset = 1280 * p.scs_y;
+    uint32_t offset = p_wl_surface_state->width * p.scs_y;
     uint64_t *px = NULL;
 
     // NOTE: We fill up 2px at a time.
@@ -125,37 +127,48 @@ extern void set_rect(struct pixel * const p_buffer_data_start, struct scs_point 
     //  - Or show 1 more pixel, i.e (width+1)/2
     // In our case, we show 1 less pixel.
     for(uint32_t y = 0; y < height; y++){
-        px = (uint64_t*)(p_buffer_data_start + offset + p.scs_x);
-        for(uint32_t x = 0; x < width/2; x++){ 
-            *px = color;   
+        px = (uint64_t*)(p_wl_surface_state->current_buffer_state.p_buffer_data_start + offset + p.scs_x);
+        for(uint32_t x = 0; x < width/2; x++){  // TODO: get rid of division in cycle
+            *px = dcolor;   
             px++;
         }
-        offset += 1280;
+        offset += p_wl_surface_state->width;
     };
 
 };
 
 
-/* TODO: alternative function
-    Short explanation: 
-        - more precise
-        - endian - independent
+/* Alternative function.
+    Slower.
+    Accurate with odd width.
+    Endian - independent?
 */
-/*extern void set_rect(struct pixel * const p_buffer_data_start, struct scs_point p,
-                     uint32_t width, uint32_t height
+extern void set_rect_a(struct wl_surface_state_s * const p_wl_surface_state,
+                        struct scs_point p,
+                        const uint32_t width,
+                        const uint32_t height,
+                        const uint32_t color
 ){
-    struct pixel *px = p_buffer_data_start + 1280 * p.scs_y +  p.scs_x;
+    struct pixel *px = p_wl_surface_state->current_buffer_state.p_buffer_data_start
+                        + p_wl_surface_state->width * p.scs_y
+                        + p.scs_x;
+
+    uint8_t a = (color & 0xff000000) >> 24;
+    uint8_t r = (color & 0x00ff0000) >> 16;
+    uint8_t g = (color & 0x0000ff00) >> 8;
+    uint8_t b = (color & 0x000000ff);
 
     for(uint16_t y = p.scs_y; y < (p.scs_y + height); y++){
         for(uint16_t x = p.scs_x; x < p.scs_x + width; x++){
-            px->alpha = 255;
-            px->red = 0;
-            px->green = 0;
-            px->blue = 0;
+            px->alpha = a;
+            px->red = r;
+            px->green = g;
+            px->blue = b;
             px++;
         };
-        px = p_buffer_data_start + 1280 * y + p.scs_x;
+        px = p_wl_surface_state->current_buffer_state.p_buffer_data_start
+                + p_wl_surface_state->width * y
+                + p.scs_x;
     };
 
 };
-*/

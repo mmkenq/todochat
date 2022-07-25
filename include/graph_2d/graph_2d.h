@@ -11,10 +11,14 @@ struct pixel {
     uint8_t alpha;
 };
 
-/* Rectangle Coordinate System point */
+
+/* Rectangle Coordinate System point
+    TODO: explanation
+*/
 struct rcs_point {
     // TODO: int16_t or int32_t ?
 };
+
 
 /* Screen Coordinate System point
     TODO: we can make them uint16_t

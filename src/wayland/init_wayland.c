@@ -10,6 +10,7 @@
 
 #include "graph_2d.h"
 #include "gui_core.h"
+#include "default_colors.h"
 
 struct wl_pointer_state_s {
     struct wl_surface_state_s wl_surface_pointer_state;
@@ -121,7 +122,7 @@ static void pointer_surface_motion_handler(
         if(p_surface_entered_state->current_buffer_state.allowed_to_write){
             p_surface_entered_state->current_buffer_state.allowed_to_write = 0;
             set_line(p_surface_entered_state, p1, p2);
-            // TODO: damage less rectangle
+            // TODO: fix damage rectangle
             wl_surface_damage_buffer(p_surface_entered_state->p_wl_surface, 0, 0, x, y);
             // wl_surface_attach(p_surface_entered_state->p_wl_surface, p_surface_entered_state->current_buffer_state.p_wl_buffer, 0, 0);
             // wl_surface_commit(p_surface_entered_state->p_wl_surface);
@@ -202,38 +203,6 @@ struct wl_pointer_listener pointer_listener = {
     .axis_discrete = pointer_surface_discrete_handler,
     .axis_value120 = pointer_surface_value120_handler
 };
-
-
-/* RENDER SURFACE
-    TODO: rewrite with wl_surface_state_s
-*/
-static void surface_render(struct pixel* p_buffer_data_start, uint32_t width, uint32_t height,
-                            uint32_t r,
-                            uint32_t g,
-                            uint32_t b,
-                            uint32_t a){
-    // y = mx + b <=> y = (dy/dx)x + b <=> 0 = xdy - ydx + b
-    
-    struct pixel *px = NULL;
-    for (int x = 0; x < width; x++) {
-        for (int y = 0; y < height; y++) {
-
-            px = p_buffer_data_start + y * width + x;
-
-            // purple
-            px->alpha = a;
-            px->red = r;
-            px->green = g;
-            px->blue = b;
-        };
-    };
-
-    // struct scs_point p1 = { .scs_x = 2, .scs_y = 6 };
-    // struct scs_point p2 = { .scs_x = 60, .scs_y = 20 };
-
-    // set_line(surface, p1, p2);
-};
-
 
 
 static void buffer_release_handler(
@@ -327,10 +296,33 @@ static void wl_callback_done_handler(
     wl_buffer_add_listener(p_wl_buffer_new, &buffer_listener, &p_wl_state->current_root_toplevel_state.current_buffer_state);
 
 
-    surface_render(p_wl_state->current_root_toplevel_state.current_buffer_state.p_buffer_data_start,
-                    p_wl_state->current_root_toplevel_state.width,
-                    p_wl_state->current_root_toplevel_state.height,
-                    60, 100, 130, 255);
+    /* BACKGROUND
+        NOTE:
+        1) When full-screened we can use set_rect() instead of set_rect_a(),
+        because screen width is usually (always?) an even number, (1024, 1280, 1920, etc.)
+        2) When not full-screened, width of the surface can be odd number,
+        so we should use set_rect_a()
+    */
+    struct scs_point p1 = { .scs_x = 0, .scs_y = 0 };
+    set_rect_a(&p_wl_state->current_root_toplevel_state,
+                p1,
+                p_wl_state->current_root_toplevel_state.width,
+                p_wl_state->current_root_toplevel_state.height,
+                DEFAULT_BACKGROUND_COLOR);
+
+
+    /* NAVIGATION BAR
+    */
+    struct scs_point p2 = {
+        .scs_x = 0,
+        .scs_y = 0
+    };
+    set_rect_a(&p_wl_state->current_root_toplevel_state, p2,
+                200,
+                p_wl_state->current_root_toplevel_state.height,
+                DEFAULT_NAVBAR_COLOR);
+
+
     wl_surface_damage_buffer(p_wl_state->current_root_toplevel_state.p_wl_surface, 0, 0, WL_SURFACE_ROOT_MAX_WIDTH, WL_SURFACE_ROOT_MAX_HEIGHT);
     wl_surface_attach(p_wl_state->current_root_toplevel_state.p_wl_surface, p_wl_state->current_root_toplevel_state.current_buffer_state.p_wl_buffer, 0, 0);
     wl_surface_commit(p_wl_state->current_root_toplevel_state.p_wl_surface);
@@ -531,13 +523,15 @@ extern void init_wayland(){
     // show the XDG_SURFACE and its toplevel surface on the screen.
     // But we won't do this right now. We will do, however, in the next configure event, which
     // should come to us informing that it has appeared on the screen.
-    surface_render((struct pixel*)p_pool_data_start, WL_SURFACE_ROOT_MAX_WIDTH, WL_SURFACE_ROOT_MAX_HEIGHT, 60, 57, 70, 255);
+    // 
     struct scs_point p = {
-        .scs_x = 5,
-        .scs_y = 5
+        .scs_x = 0,
+        .scs_y = 0
     };
-    set_rect(wl_state.current_root_toplevel_state.current_buffer_state.p_buffer_data_start,
-             p, 121, 120);
+    set_rect_a(&wl_state.current_root_toplevel_state, p,
+                WL_SURFACE_ROOT_MAX_WIDTH,
+                WL_SURFACE_ROOT_MAX_HEIGHT,
+                0xffff0000);
     wl_surface_attach(p_wl_surface_root, p_wl_buffer_root, 0, 0);
     wl_surface_commit(p_wl_surface_root);
 
