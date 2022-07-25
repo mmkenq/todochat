@@ -1,7 +1,7 @@
 WORK_DIR:= $(shell pwd)
 .PHONY: clean
 
-all: clean prepare xdg_shell surfaces graph_2d
+all: clean prepare xdg_shell graph_2d gui_core surfaces
 	gcc -Iinclude/wayland -lwayland-client $(WORK_DIR)/obj/* $(WORK_DIR)/main.c -o $(WORK_DIR)/main
 
 prepare:
@@ -16,6 +16,9 @@ clean:
 
 graph_2d:
 	gcc -c -Iinclude/graph_2d $(WORK_DIR)/src/graph_2d/graph_2d.c -o $(WORK_DIR)/obj/graph_2d.o
+
+gui_core:
+	gcc -c -Iinclude/graph_2d -Iinclude/wayland $(WORK_DIR)/src/wayland/gui_core.c -o $(WORK_DIR)/obj/gui_core.o
 
 surfaces:
 	gcc -c -Iinclude/graph_2d -Iinclude/wayland $(WORK_DIR)/src/wayland/surfaces.c -o $(WORK_DIR)/obj/surfaces.o

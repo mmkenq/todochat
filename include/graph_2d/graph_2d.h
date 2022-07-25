@@ -38,25 +38,6 @@ struct line_func_2d {
 	// uint32_t b;
 };
 
-/* Fill a given BUFFER with line. */
-extern void set_line(struct pixel *p_buffer_data_start, struct scs_point point1, struct scs_point point2,
-                     uint32_t surface_width, uint32_t surface_height);
-
-/* Think of how to make a function set_line, that "fills a given SURFACE with line."
-    without including wl_surface_state_s struct to graph2d.h
-*/
-
-
-
-/* Fill a given buffer with rectanglt
-    Cheatsheet: 
-    int       *      mutable_pointer_to_mutable_int;
-    int const *      mutable_pointer_to_constant_int;
-    int       *const constant_pointer_to_mutable_int;
-    int const *const constant_pointer_to_constant_int;
-*/
-extern void set_rect(struct pixel * const p_buffer_data_start, struct scs_point p,
-                     uint32_t width, uint32_t height);
 
 
 #endif

@@ -9,50 +9,7 @@
 #include "xdg_shell.h"
 
 #include "graph_2d.h"
-
-#define WL_SURFACE_ROOT_MAX_WIDTH 1280 // px
-#define WL_SURFACE_ROOT_MAX_HEIGHT 720 // px
-#define WL_SURFACE_ROOT_MAX_STRIDE WL_SURFACE_ROOT_MAX_WIDTH * 4 // px
-#define WL_SURFACE_ROOT_BUFFER_SIZE WL_SURFACE_ROOT_MAX_WIDTH * WL_SURFACE_ROOT_MAX_HEIGHT * 4 // bytes
-
-#define WL_SURFACE_ROOT_MIN_WIDTH 500  // px
-#define WL_SURFACE_ROOT_MIN_HEIGHT 500 // px
-
-#define CURSOR_SURFACE_WIDTH 16   // px
-#define CURSOR_SURFACE_HEIGHT 16 // px
-#define CURSOR_SURFACE_STRIDE CURSOR_SURFACE_WIDTH * 4 // px
-#define CURSOR_SURFACE_BUFFER_SIZE CURSOR_SURFACE_WIDTH * CURSOR_SURFACE_HEIGHT * 4 // bytes
-
-// TODO: Find out why "+ 4" bytes at the end??
-#define WL_SHARED_MEMORY_POOL_SIZE (WL_SURFACE_ROOT_BUFFER_SIZE + CURSOR_SURFACE_BUFFER_SIZE) + 4 // bytes 
-
-
-struct wl_buffer_state_s {
-    struct wl_buffer *p_wl_buffer;
-    struct pixel *p_buffer_data_start;
-
-    // This value is used as a semaphore, and changes between 0 and 1.
-    // In other words, it's a bool variable.
-    // We could use C bitfields like so: char allowed_to_write: 1;
-    // But we need speed, and managing C bitfields "under the hood" (or under the compiler)
-    // is slower than just managing a struct member.
-    char allowed_to_write;
-
-
-    // TODO: think of a use.
-    char padding[7];
-};
-
-
-struct wl_surface_state_s {
-    struct wl_surface *p_wl_surface;
-    struct wl_buffer_state_s current_buffer_state;
-
-    uint32_t width;
-    uint32_t height;
-    // other_buffer_state, shared pool?
-};
-
+#include "gui_core.h"
 
 struct wl_pointer_state_s {
     struct wl_surface_state_s wl_surface_pointer_state;
@@ -100,27 +57,7 @@ struct wl_state_s {
 };
 
 
-/* cursorv RENDERER */
-static void cursor_render(struct wl_pointer_state_s* p_pointer_state)
-{
-    // TODO
-    // struct wl_cursor_v cursor = get_cursor_by_name(cursor_name);
-    
-    for (int y = 0; y < p_pointer_state->wl_surface_pointer_state.height; y++){
-        for (int x = 0; x < y + 2 ; x++){
-            struct pixel *px = p_pointer_state->wl_surface_pointer_state.current_buffer_state.p_buffer_data_start
-                                + y * p_pointer_state->wl_surface_pointer_state.width
-                                + x;
-            // ARGB little endian
-            // green
-            px->blue = 130;
-            px->green = 150;
-            px->red = 100;
-            px->alpha = 255;
-        };
-    };
 
-};
 
 
 /* POINTER LISTENER */
@@ -143,7 +80,7 @@ static void pointer_surface_enter_handler(
     // Show it
     wl_pointer_set_cursor(p_pointer, serial, p_pointer_state->wl_surface_pointer_state.p_wl_surface,
                           0, 0); // TODO: cursor_offset members in wl_pointer_state_s
-    cursor_render(p_pointer_state);
+    set_cursor(&p_pointer_state->wl_surface_pointer_state);
     fprintf(stderr, "Pointer enter. Cursor rendered.\n");
     wl_surface_commit(p_pointer_state->wl_surface_pointer_state.p_wl_surface);
 
@@ -183,7 +120,7 @@ static void pointer_surface_motion_handler(
 
         if(p_surface_entered_state->current_buffer_state.allowed_to_write){
             p_surface_entered_state->current_buffer_state.allowed_to_write = 0;
-            set_line(p_surface_entered_state->current_buffer_state.p_buffer_data_start, p1, p2, p_surface_entered_state->width, p_surface_entered_state->height);
+            set_line(p_surface_entered_state, p1, p2);
             // TODO: damage less rectangle
             wl_surface_damage_buffer(p_surface_entered_state->p_wl_surface, 0, 0, x, y);
             // wl_surface_attach(p_surface_entered_state->p_wl_surface, p_surface_entered_state->current_buffer_state.p_wl_buffer, 0, 0);
@@ -294,7 +231,7 @@ static void surface_render(struct pixel* p_buffer_data_start, uint32_t width, ui
     // struct scs_point p1 = { .scs_x = 2, .scs_y = 6 };
     // struct scs_point p2 = { .scs_x = 60, .scs_y = 20 };
 
-    // set_line(p_buffer_data_start, p1, p2);
+    // set_line(surface, p1, p2);
 };
 
 
