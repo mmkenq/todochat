@@ -6,11 +6,13 @@ all: clean prepare xdg_shell surfaces graph_2d
 
 prepare:
 	mkdir -p $(WORK_DIR)/obj
+# 	mkdir -p $(WORK_DIR)/tmp
 
 clean:
 	rm -f $(WORK_DIR)/main
+	rm -f $(WORK_DIR)/log
 	rm -f -r $(WORK_DIR)/obj
-# 	rm -f $(WORK_DIR)/tmp/*
+# 	rm -f -r $(WORK_DIR)/tmp
 
 graph_2d:
 	gcc -c -Iinclude/graph_2d $(WORK_DIR)/src/graph_2d/graph_2d.c -o $(WORK_DIR)/obj/graph_2d.o

@@ -10,9 +10,11 @@ It is similar to Telegram saved messages or Twitter threads, but with some diffe
 3. Twitter is not open sourced. Todochat is.
 4. ..TODO
 
-# Dependencies
-1. WAYLAND (Particularly, Compositor. Recommended: sway)
-2. ..TODO
+# Requirements
+1. Linux 64 bit little-endian
+2. GCC compiler
+3. WAYLAND (Particularly, Compositor. Recommended: sway)
+4. ..TODO
 
 # Installation & run
 1. Clone the repository

@@ -13,10 +13,13 @@ struct pixel {
 
 /* Rectangle Coordinate System point */
 struct rcs_point {
-    // TODO
+    // TODO: int16_t or int32_t ?
 };
 
-/* Screen Coordinate System point */
+/* Screen Coordinate System point
+    TODO: we can make them uint16_t
+    and add some more members
+*/
 struct scs_point {
     uint32_t scs_x;
     uint32_t scs_y;
@@ -40,7 +43,20 @@ extern void set_line(struct pixel *p_buffer_data_start, struct scs_point point1,
                      uint32_t surface_width, uint32_t surface_height);
 
 /* Think of how to make a function set_line, that "fills a given SURFACE with line."
-    witout including wl_surface_state_s struct to graph2d.h
+    without including wl_surface_state_s struct to graph2d.h
 */
+
+
+
+/* Fill a given buffer with rectanglt
+    Cheatsheet: 
+    int       *      mutable_pointer_to_mutable_int;
+    int const *      mutable_pointer_to_constant_int;
+    int       *const constant_pointer_to_mutable_int;
+    int const *const constant_pointer_to_constant_int;
+*/
+extern void set_rect(struct pixel * const p_buffer_data_start, struct scs_point p,
+                     uint32_t width, uint32_t height);
+
 
 #endif

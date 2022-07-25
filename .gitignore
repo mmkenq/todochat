@@ -1,6 +1,9 @@
-obj/
+# Developer stuff
 tmp/
 web/
-main
 env
 log
+
+# Compliled files
+obj/
+main

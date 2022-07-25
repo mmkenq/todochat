@@ -31,7 +31,6 @@ struct wl_buffer_state_s {
     struct wl_buffer *p_wl_buffer;
     struct pixel *p_buffer_data_start;
 
-
     // This value is used as a semaphore, and changes between 0 and 1.
     // In other words, it's a bool variable.
     // We could use C bitfields like so: char allowed_to_write: 1;
@@ -41,7 +40,7 @@ struct wl_buffer_state_s {
 
 
     // TODO: think of a use.
-    char placeholder[7];
+    char padding[7];
 };
 
 
@@ -187,8 +186,8 @@ static void pointer_surface_motion_handler(
             set_line(p_surface_entered_state->current_buffer_state.p_buffer_data_start, p1, p2, p_surface_entered_state->width, p_surface_entered_state->height);
             // TODO: damage less rectangle
             wl_surface_damage_buffer(p_surface_entered_state->p_wl_surface, 0, 0, x, y);
-            wl_surface_attach(p_surface_entered_state->p_wl_surface, p_surface_entered_state->current_buffer_state.p_wl_buffer, 0, 0);
-            wl_surface_commit(p_surface_entered_state->p_wl_surface);
+            // wl_surface_attach(p_surface_entered_state->p_wl_surface, p_surface_entered_state->current_buffer_state.p_wl_buffer, 0, 0);
+            // wl_surface_commit(p_surface_entered_state->p_wl_surface);
         }
         else{
             fprintf(stderr, "Surface buffer RACE ERROR (on pointer motion): %d\n", ++race_error);
@@ -224,6 +223,10 @@ static void pointer_surface_frame_handler(
     struct wl_pointer *p_pointer
 ){
     struct wl_pointer_state_s* p_pointer_state = (struct wl_pointer_state_s*)p_pointer_data;
+
+    wl_surface_attach(p_pointer_state->p_wl_surface_entered_state->p_wl_surface,
+                      p_pointer_state->p_wl_surface_entered_state->current_buffer_state.p_wl_buffer, 0, 0);
+    wl_surface_commit(p_pointer_state->p_wl_surface_entered_state->p_wl_surface);
 };
 
 static void pointer_surface_source_handler(
@@ -274,10 +277,11 @@ static void surface_render(struct pixel* p_buffer_data_start, uint32_t width, ui
                             uint32_t a){
     // y = mx + b <=> y = (dy/dx)x + b <=> 0 = xdy - ydx + b
     
+    struct pixel *px = NULL;
     for (int x = 0; x < width; x++) {
         for (int y = 0; y < height; y++) {
 
-            struct pixel *px = p_buffer_data_start + y * width + x;
+            px = p_buffer_data_start + y * width + x;
 
             // purple
             px->alpha = a;
@@ -423,6 +427,7 @@ static void xdg_toplevel_configure_handler(
     // In the former we may find that width and height are zero.
     // TODO: EXPLAIN WHY ZERO?
     if(width == 0 && height == 0){
+        // TODO: make "load" window
         fprintf(stderr, "The compositor is configuring the surface..\n");
         return;
     }
@@ -513,9 +518,9 @@ extern void init_wayland(){
         And with multiple buffers we can attach them to multiple wl_surface'es
         TODO: move to create_wl_memory()
     */
-    int shm_fd = shm_open("/todochat_wl_shm_pool", O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+    uint32_t shm_fd = shm_open("/todochat_wl_shm_pool", O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
     ftruncate(shm_fd, WL_SHARED_MEMORY_POOL_SIZE);
-    unsigned char *p_pool_data_start = mmap(NULL, WL_SHARED_MEMORY_POOL_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    uint8_t *p_pool_data_start = mmap(NULL, WL_SHARED_MEMORY_POOL_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     struct wl_shm_pool* p_pool = wl_shm_create_pool(wl_state.current_globals_state.p_wl_shm, shm_fd, WL_SHARED_MEMORY_POOL_SIZE);
     // wl_shm_pool_set_user_data(struct wl_shm_pool *p_pool, void *p_user_data);
     wl_state.p_current_pool = p_pool;
@@ -589,7 +594,13 @@ extern void init_wayland(){
     // show the XDG_SURFACE and its toplevel surface on the screen.
     // But we won't do this right now. We will do, however, in the next configure event, which
     // should come to us informing that it has appeared on the screen.
-    // surface_render((struct pixel*)p_pool_data_start, WL_SURFACE_ROOT_MAX_WIDTH, WL_SURFACE_ROOT_MAX_HEIGHT, 60, 57, 70, 255);
+    surface_render((struct pixel*)p_pool_data_start, WL_SURFACE_ROOT_MAX_WIDTH, WL_SURFACE_ROOT_MAX_HEIGHT, 60, 57, 70, 255);
+    struct scs_point p = {
+        .scs_x = 5,
+        .scs_y = 5
+    };
+    set_rect(wl_state.current_root_toplevel_state.current_buffer_state.p_buffer_data_start,
+             p, 121, 120);
     wl_surface_attach(p_wl_surface_root, p_wl_buffer_root, 0, 0);
     wl_surface_commit(p_wl_surface_root);
 
