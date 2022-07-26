@@ -104,12 +104,18 @@ extern void set_line(struct wl_surface_state_s * const p_wl_surface_state, struc
     0xff0000ff is full blue
     0xffdeed55 is yellowish
 */
+// TODO: return Errors, like:
+//  1) width is bigger than the surface's
+//  2) ...
 extern void set_rect(struct wl_surface_state_s * const p_wl_surface_state,
                         struct scs_point p,
                         const uint32_t width,
                         const uint32_t height,
                         const uint32_t color
 ){
+    if(width + p.scs_x > p_wl_surface_state->width) return;
+
+
     // doubled - color
     uint64_t dcolor = (uint64_t)color << 32 | color;
 
@@ -126,9 +132,9 @@ extern void set_rect(struct wl_surface_state_s * const p_wl_surface_state,
     //  - Show 1 less pixel, i.e width/2
     //  - Or show 1 more pixel, i.e (width+1)/2
     // In our case, we show 1 less pixel.
-    for(uint32_t y = 0; y < height; y++){
+    for(uint16_t y = 0; y < height; y++){
         px = (uint64_t*)(p_wl_surface_state->current_buffer_state.p_buffer_data_start + offset + p.scs_x);
-        for(uint32_t x = 0; x < width/2; x++){  // TODO: get rid of division in cycle
+        for(uint16_t x = 0; x < width/2; x++){  // TODO: get rid of division in cycle
             *px = dcolor;   
             px++;
         }
@@ -149,16 +155,18 @@ extern void set_rect_a(struct wl_surface_state_s * const p_wl_surface_state,
                         const uint32_t height,
                         const uint32_t color
 ){
-    struct pixel *px = p_wl_surface_state->current_buffer_state.p_buffer_data_start
-                        + p_wl_surface_state->width * p.scs_y
-                        + p.scs_x;
+    if(width + p.scs_x > p_wl_surface_state->width) return;
 
     uint8_t a = (color & 0xff000000) >> 24;
     uint8_t r = (color & 0x00ff0000) >> 16;
     uint8_t g = (color & 0x0000ff00) >> 8;
     uint8_t b = (color & 0x000000ff);
+    struct pixel *px = NULL;
 
     for(uint16_t y = p.scs_y; y < (p.scs_y + height); y++){
+        px = p_wl_surface_state->current_buffer_state.p_buffer_data_start
+                + p_wl_surface_state->width * y
+                + p.scs_x;
         for(uint16_t x = p.scs_x; x < p.scs_x + width; x++){
             px->alpha = a;
             px->red = r;
@@ -166,9 +174,6 @@ extern void set_rect_a(struct wl_surface_state_s * const p_wl_surface_state,
             px->blue = b;
             px++;
         };
-        px = p_wl_surface_state->current_buffer_state.p_buffer_data_start
-                + p_wl_surface_state->width * y
-                + p.scs_x;
     };
 
 };

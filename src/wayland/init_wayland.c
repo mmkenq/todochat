@@ -317,7 +317,7 @@ static void wl_callback_done_handler(
         .scs_x = 0,
         .scs_y = 0
     };
-    set_rect_a(&p_wl_state->current_root_toplevel_state, p2,
+    set_rect(&p_wl_state->current_root_toplevel_state, p2,
                 200,
                 p_wl_state->current_root_toplevel_state.height,
                 DEFAULT_NAVBAR_COLOR);

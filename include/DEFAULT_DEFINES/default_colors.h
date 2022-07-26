@@ -8,7 +8,8 @@
 */
 
 
-#define DEFAULT_NAVBAR_COLOR 0xff3d8069  	// greenish
+// #define DEFAULT_NAVBAR_COLOR 0xff3d8069  	// greenish
+#define DEFAULT_NAVBAR_COLOR 0xffb5b1b8  	// light
 #define DEFAULT_BACKGROUND_COLOR 0xff22272a // gray
 
 #endif

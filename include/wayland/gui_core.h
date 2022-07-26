@@ -19,7 +19,7 @@
 #define CURSOR_SURFACE_STRIDE CURSOR_SURFACE_WIDTH * 4 // px
 #define CURSOR_SURFACE_BUFFER_SIZE CURSOR_SURFACE_WIDTH * CURSOR_SURFACE_HEIGHT * 4 // bytes
 
-// TODO: Find out why "+ 4" bytes at the end??
+// TODO: Find out why "+ 4" bytes at the end?? Why do we use 4 more bytes than we need?
 #define WL_SHARED_MEMORY_POOL_SIZE (WL_SURFACE_ROOT_BUFFER_SIZE + CURSOR_SURFACE_BUFFER_SIZE) + 4 // bytes 
 
 
